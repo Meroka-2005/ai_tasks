@@ -1,0 +1,222 @@
+"""
+Task 4: Breadth-First Search (BFS) & Depth-First Search (DFS)
+==============================================================
+Both algorithms find the path from an initial node to a goal node
+in a graph and print every step with well-labelled annotation.
+
+
+
+from collections import deque
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import networkx as nx
+
+print("=" * 60)
+print("TASK 4 – BFS & DFS Search with Path Annotation")
+print("=" * 60)
+
+# ─── Graph Definition ─────────────────────────────────────────────
+# Undirected graph: node → list of neighbours
+GRAPH = {
+    'A': ['B', 'C'],
+    'B': ['A', 'D', 'E'],
+    'C': ['A', 'F', 'G'],
+    'D': ['B'],
+    'E': ['B', 'H'],
+    'F': ['C'],
+    'G': ['C', 'I'],
+    'H': ['E', 'J'],
+    'I': ['G'],
+    'J': ['H'],
+}
+
+START = 'A'
+GOAL  = 'J'
+
+# ─────────────────────────────────────────────────────────────────
+# 1. BREADTH-FIRST SEARCH
+# ─────────────────────────────────────────────────────────────────
+def bfs(graph: dict, start: str, goal: str):
+    """
+    BFS explores nodes level by level using a QUEUE (FIFO).
+    Guarantees the SHORTEST path in an unweighted graph.
+    Returns (path, visited_order, steps_log)
+    """
+    print("\n" + "━" * 60)
+    print("  BREADTH-FIRST SEARCH (BFS)")
+    print("  Data structure : QUEUE (First-In First-Out)")
+    print("  Explores nodes : Level by level")
+    print(f"  Start → Goal   : {start} → {goal}")
+    print("━" * 60)
+
+    queue     = deque([[start]])      # Queue of paths (not just nodes)
+    visited   = set()
+    steps_log = []
+    step      = 1
+
+    while queue:
+        path = queue.popleft()        # FIFO: take from front
+        node = path[-1]               # Current node = last in path
+
+        if node in visited:
+            continue
+
+        visited.add(node)
+        steps_log.append(node)
+
+        print(f"\n  Step {step:>2}: Visiting node [{node}]")
+        print(f"          Current path  : {' → '.join(path)}")
+        print(f"          Queue size    : {len(queue)}")
+        print(f"          Visited so far: {sorted(visited)}")
+        step += 1
+
+        if node == goal:
+            print(f"\n  ✅ GOAL '{goal}' REACHED!")
+            print(f"     Final path : {' → '.join(path)}")
+            print(f"     Path length: {len(path) - 1} edges")
+            return path, steps_log
+
+        for neighbour in sorted(graph[node]):  # sorted for determinism
+            if neighbour not in visited:
+                new_path = path + [neighbour]
+                queue.append(new_path)
+                print(f"          Added to queue : {' → '.join(new_path)}")
+
+    print(f"\n  ❌ Goal '{goal}' not reachable from '{start}'.")
+    return None, steps_log
+
+
+# ─────────────────────────────────────────────────────────────────
+# 2. DEPTH-FIRST SEARCH
+# ─────────────────────────────────────────────────────────────────
+def dfs(graph: dict, start: str, goal: str):
+    """
+    DFS explores as deep as possible before backtracking using a STACK (LIFO).
+    Does NOT guarantee the shortest path.
+    Returns (path, visited_order, steps_log)
+    """
+    print("\n" + "━" * 60)
+    print("  DEPTH-FIRST SEARCH (DFS)")
+    print("  Data structure : STACK (Last-In First-Out)")
+    print("  Explores nodes : As deep as possible first")
+    print(f"  Start → Goal   : {start} → {goal}")
+    print("━" * 60)
+
+    stack     = [[start]]            # Stack of paths
+    visited   = set()
+    steps_log = []
+    step      = 1
+
+    while stack:
+        path = stack.pop()           # LIFO: take from top
+        node = path[-1]
+
+        if node in visited:
+            continue
+
+        visited.add(node)
+        steps_log.append(node)
+
+        print(f"\n  Step {step:>2}: Visiting node [{node}]")
+        print(f"          Current path  : {' → '.join(path)}")
+        print(f"          Stack size    : {len(stack)}")
+        print(f"          Visited so far: {sorted(visited)}")
+        step += 1
+
+        if node == goal:
+            print(f"\n  ✅ GOAL '{goal}' REACHED!")
+            print(f"     Final path : {' → '.join(path)}")
+            print(f"     Path length: {len(path) - 1} edges")
+            return path, steps_log
+
+        for neighbour in sorted(graph[node], reverse=True):  # reverse for left-to-right DFS
+            if neighbour not in visited:
+                new_path = path + [neighbour]
+                stack.append(new_path)
+                print(f"          Pushed to stack: {' → '.join(new_path)}")
+
+    print(f"\n  ❌ Goal '{goal}' not reachable from '{start}'.")
+    return None, steps_log
+
+
+# ─────────────────────────────────────────────────────────────────
+# 3. RUN BOTH ALGORITHMS
+# ─────────────────────────────────────────────────────────────────
+bfs_path, bfs_order = bfs(GRAPH, START, GOAL)
+dfs_path, dfs_order = dfs(GRAPH, START, GOAL)
+
+# ─────────────────────────────────────────────────────────────────
+# 4. COMPARISON SUMMARY
+# ─────────────────────────────────────────────────────────────────
+print("\n" + "=" * 60)
+print("  COMPARISON SUMMARY")
+print("=" * 60)
+print(f"  {'Algorithm':<8}  {'Path':<30}  {'Length'}")
+print(f"  {'-'*8}  {'-'*30}  {'-'*6}")
+print(f"  {'BFS':<8}  {' → '.join(bfs_path):<30}  {len(bfs_path)-1} edges")
+print(f"  {'DFS':<8}  {' → '.join(dfs_path):<30}  {len(dfs_path)-1} edges")
+print(f"\n  Nodes visited by BFS : {bfs_order}")
+print(f"  Nodes visited by DFS : {dfs_order}")
+
+# ─────────────────────────────────────────────────────────────────
+# 5. VISUALISE BOTH PATHS
+# ─────────────────────────────────────────────────────────────────
+print("\n[Generating visualisation...]")
+
+G_nx = nx.Graph(GRAPH)
+pos  = nx.spring_layout(G_nx, seed=7, k=1.5)
+
+def draw_search(ax, title, path, visit_order, color):
+    path_edges = list(zip(path, path[1:]))
+    node_colors = []
+    for n in G_nx.nodes():
+        if n == START:
+            node_colors.append("#27AE60")   # green = start
+        elif n == GOAL:
+            node_colors.append("#E74C3C")   # red   = goal
+        elif n in path:
+            node_colors.append(color)       # highlighted path
+        else:
+            node_colors.append("#BDC3C7")   # grey  = unvisited
+
+    edge_colors = [color if (u,v) in path_edges or (v,u) in path_edges
+                   else "#CCCCCC" for u,v in G_nx.edges()]
+    edge_widths = [3.5 if (u,v) in path_edges or (v,u) in path_edges
+                   else 1.0 for u,v in G_nx.edges()]
+
+    nx.draw_networkx(G_nx, pos=pos, ax=ax,
+                     node_color=node_colors, node_size=900,
+                     edge_color=edge_colors, width=edge_widths,
+                     font_size=11, font_weight="bold",
+                     with_labels=True)
+
+    # Annotate visit order
+    for i, node in enumerate(visit_order, 1):
+        x, y = pos[node]
+        ax.annotate(f"#{i}", (x, y + 0.12), ha="center", fontsize=7,
+                    color="navy", fontweight="bold")
+
+    ax.set_title(title, fontsize=12, fontweight="bold")
+    ax.axis("off")
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 7))
+fig.suptitle(f"BFS vs DFS  |  Start: {START}  →  Goal: {GOAL}", fontsize=14, fontweight="bold")
+
+draw_search(ax1, f"BFS – Shortest Path ({len(bfs_path)-1} edges)", bfs_path, bfs_order, "#3498DB")
+draw_search(ax2, f"DFS – Depth-First Path ({len(dfs_path)-1} edges)", dfs_path, dfs_order, "#E67E22")
+
+# Shared legend
+legend = [
+    mpatches.Patch(color="#27AE60", label=f"Start ({START})"),
+    mpatches.Patch(color="#E74C3C", label=f"Goal ({GOAL})"),
+    mpatches.Patch(color="#3498DB", label="BFS path"),
+    mpatches.Patch(color="#E67E22", label="DFS path"),
+    mpatches.Patch(color="#BDC3C7", label="Unvisited"),
+]
+fig.legend(handles=legend, loc="lower center", ncol=5, fontsize=10, frameon=True)
+
+plt.tight_layout(rect=[0, 0.06, 1, 1])
+plt.savefig("search_comparison.png", dpi=100)
+plt.show()
+print("   Visualisation saved as 'search_comparison.png'")
+print("\n✅ Task 4 complete!")
