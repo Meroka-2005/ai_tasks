@@ -1,0 +1,117 @@
+% ============================================================
+% Task 3: Prolog Family Tree
+% ============================================================
+% This file defines a family with:
+%   - Grandparents, Parents, Children, Grandchildren,
+%     Cousins, Uncles and Aunts.
+%
+% HOW TO RUN in SWI-Prolog:
+%   1. Open SWI-Prolog
+%   2. Type:  consult('family_tree.pl').   (or use File > Consult)
+%   3. Run queries below
+%
+% SAMPLE QUERIES:
+%   ?- parent(tom, bob).
+%   ?- grandparent(tom, ann).
+%   ?- sibling(bob, liz).
+%   ?- uncle(bob, pat).
+%   ?- aunt(liz, pat).
+%   ?- cousin(pat, jim).
+%   ?- grandchild(ann, tom).
+%   ?- ancestor(tom, pat).
+%   ?- findall(X, child(X, bob), Children), write(Children).
+% ============================================================
+
+% ─── GENERATION 1 – Grandparents ────────────────────────────────
+% male(Name).  female(Name).  parent(Parent, Child).
+
+male(tom).
+male(bob).
+male(pat).
+male(jim).
+male(peter).
+
+female(liz).
+female(ann).
+female(sue).
+female(mary).
+female(kate).
+
+% ─── GENERATION 1: Tom & Mary are the grandparents ──────────────
+parent(tom,  bob).    % Tom is parent of Bob
+parent(tom,  liz).    % Tom is parent of Liz
+parent(mary, bob).
+parent(mary, liz).
+
+% ─── GENERATION 2: Bob & Sue have children Pat & Jim ────────────
+parent(bob, pat).
+parent(bob, jim).
+parent(sue, pat).
+parent(sue, jim).
+
+% Liz & Peter have children Ann & Kate
+parent(liz,   ann).
+parent(liz,   kate).
+parent(peter, ann).
+parent(peter, kate).
+
+% ─── RULES ──────────────────────────────────────────────────────
+
+% father(X, Y) – X is the father of Y
+father(X, Y) :- male(X), parent(X, Y).
+
+% mother(X, Y) – X is the mother of Y
+mother(X, Y) :- female(X), parent(X, Y).
+
+% child(X, Y) – X is a child of Y
+child(X, Y) :- parent(Y, X).
+
+% grandparent(X, Y) – X is a grandparent of Y
+grandparent(X, Y) :- parent(X, Z), parent(Z, Y).
+
+% grandchild(X, Y) – X is a grandchild of Y
+grandchild(X, Y) :- grandparent(Y, X).
+
+% sibling(X, Y) – X and Y share at least one parent (and are not the same person)
+sibling(X, Y) :- parent(P, X), parent(P, Y), X \= Y.
+
+% brother(X, Y)
+brother(X, Y) :- male(X), sibling(X, Y).
+
+% sister(X, Y)
+sister(X, Y) :- female(X), sibling(X, Y).
+
+% uncle(X, Y) – X is an uncle of Y (X is male sibling of a parent of Y)
+uncle(X, Y) :- brother(X, P), parent(P, Y).
+
+% aunt(X, Y) – X is an aunt of Y
+aunt(X, Y) :- sister(X, P), parent(P, Y).
+
+% cousin(X, Y) – X and Y are cousins (their parents are siblings)
+cousin(X, Y) :- parent(PX, X), parent(PY, Y), sibling(PX, PY).
+
+% ancestor(X, Y) – X is an ancestor of Y (recursive)
+ancestor(X, Y) :- parent(X, Y).
+ancestor(X, Y) :- parent(X, Z), ancestor(Z, Y).
+
+% descendant(X, Y) – X is a descendant of Y
+descendant(X, Y) :- ancestor(Y, X).
+
+% ─── FAMILY TREE DIAGRAM ────────────────────────────────────────
+%
+%          Tom ── Mary
+%         /           \
+%        Bob ── Sue   Liz ── Peter
+%       /    \       /     \
+%     Pat    Jim   Ann    Kate
+%
+%  Generations:
+%    G1: Tom, Mary        (grandparents)
+%    G2: Bob, Liz         (parents / children of Tom & Mary)
+%        Sue, Peter       (spouses)
+%    G3: Pat, Jim         (Bob & Sue's children)
+%        Ann, Kate        (Liz & Peter's children)
+%        Pat & Jim are cousins with Ann & Kate
+%        Bob is uncle to Ann & Kate
+%        Liz is aunt to Pat & Jim
+% ────────────────────────────────────────────────────────────────
